@@ -5,9 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Emision extends Model
+class Cob_inf extends Model
 {
     use HasFactory;
-    protected $table = 'arqueo';
-    protected $primaryKey = 'nro';
+    protected $table = 'cob_inf';
 }

@@ -43,7 +43,7 @@
                             <tr wire:key="registro-{{ $registro->id }}" class="fila-registro clickable-row"
                                 data-registro-id="{{ $registro->id }}" style="cursor: pointer;">
                                 <td>{{ date('d-m-Y', strtotime($registro->fecha)) }}</td>
-                                <td>{{ $registro->apellidos }}</td>
+                                <td>{{ $registro->nombre }}</td>
                                 <td>${{ number_format($registro->total, 2, ',', '.') }}</td>
                                 <td>{{ $registro->dir_cli }}</td>
                                 <td>

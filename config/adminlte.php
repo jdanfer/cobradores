@@ -322,40 +322,45 @@ return [
             'icon' => 'nav-icon fas fa-edit',
         ],
         [
+            'text' => 'Entregas',
+            'url'  => 'admin/entregas',
+            'icon' => 'fas fa-money-bill-wave',
+        ],
+        [
             'text' => 'Informes',
             'icon' => 'nav-icon fas fa-bars',
             'submenu' => [
                 [
-                    'text' => 'Cobrados',
-                    'icon' => 'fas fa-solid fa-users',
-                    'url'  => '#',
-                ],
-                [
-                    'text' => 'Pendientes',
-                    'icon' => 'fas fa-solid fa-users',
-                    'url'  => '#',
-                ],
-                [
-                    'text' => 'Bajas',
-                    'icon' => 'fas fa-solid fa-users',
-                    'url'  => '#',
+                    'text' => 'Informes de cobranza',
+                    'icon' => 'fas fa-edit',
+                    'url'  => 'admin/informescobrador',
                 ],
             ],
         ],
         [
-            'text'    => 'Admin',
-            'icon'    => 'fas fa-solid fa-user-plus',
+            'text'    => 'Administración',
+            'icon'    => 'fas fa-solid fa-users',
             'can' => 'usuario-admin',
             'submenu' => [
                 [
-                    'text' => 'Informes',
-                    'icon' => 'fas fa-solid fa-users',
-                    'url'  => 'admin/informesadm',
+                    'text' => 'Validar',
+                    'icon' => 'fas fa-edit',
+                    'url'  => 'admin/validaciones',
                 ],
                 [
-                    'text' => 'Importar archivos',
-                    'icon' => 'fas fa-solid fa-users',
-                    'url'  => 'admin/importar',
+                    'text' => 'Mutuales/Otros',
+                    'icon' => 'fas fa-edit',
+                    'url'  => 'admin/mutuales',
+                ],
+                [
+                    'text' => 'Otra comisión',
+                    'icon' => 'fas fa-edit',
+                    'url'  => 'admin/comisiones',
+                ],
+                [
+                    'text' => 'Auditar',
+                    'icon' => 'fas fa-edit',
+                    'url'  => 'admin/auditoria',
                 ],
                 [
                     'text' => 'Permisos',
@@ -448,12 +453,17 @@ return [
             ],
         ],
         'Sweetalert2' => [
-            'active' => false,
+            'active' => true,
             'files' => [
                 [
                     'type' => 'js',
-                    'asset' => false,
-                    'location' => '//cdn.jsdelivr.net/npm/sweetalert2@8',
+                    'asset' => true,
+                    'location' => 'vendor/sweetalert2/sweetalert2.min.js',
+                ],
+                [
+                    'type' => 'css',
+                    'asset' => true,
+                    'location' => 'vendor/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css',
                 ],
             ],
         ],

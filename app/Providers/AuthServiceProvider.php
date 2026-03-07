@@ -26,7 +26,7 @@ class AuthServiceProvider extends ServiceProvider
         $this->registerPolicies();
         Gate::define('usuario-admin', function ($user) {
 
-            if ($user->esadmin == 'on') {
+            if ($user->hcerol_id === 1) {
                 return true;
             }
 
@@ -35,16 +35,10 @@ class AuthServiceProvider extends ServiceProvider
 
         Gate::define('usuario-rol', function ($user) {
 
-            if ($user->hcerol_id != 5) {
+            if ($user->hcerol_id === 1) {
                 return true;
             }
 
-            return false;
-        });
-        Gate::define('usuario-rol-gasto', function ($user) {
-            if ($user->hcerol_id === 5) {
-                return true;
-            }
             return false;
         });
 

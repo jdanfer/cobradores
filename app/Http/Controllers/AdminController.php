@@ -9,6 +9,46 @@ use Illuminate\Http\Request;
 class AdminController extends Controller
 {
     //
+    public function showCobranzaR()
+    {
+        return view('admin.showCobranzaR');
+    }
+
+    public function showInformesCob()
+    {
+        return view('admin.showInformesCob');
+    }
+
+    public function showAuditoria()
+    {
+        return view('admin.showAuditoria');
+    }
+
+    public function showEntregas()
+    {
+        return view('admin.showEntregas');
+    }
+
+    public function showMutuales()
+    {
+        return view('admin.showMutuales');
+    }
+
+    public function showComisiones()
+    {
+        return view('admin.showComision');
+    }
+
+    public function showAsignarDeuda()
+    {
+        return view('admin.showAsignarDeuda');
+    }
+
+    public function showValidaradm()
+    {
+        return view('admin.showValidaradm');
+    }
+
     public function geocodificarYGuardar()
     {
         $registro = Emision::where('documento', 2443543)->first();

@@ -8,5 +8,5 @@ use Illuminate\Database\Eloquent\Model;
 class Emi0725 extends Model
 {
     use HasFactory;
-    protected $table = 'emi0725';
+    protected $table = 'arqueo';
 }

@@ -569,4 +569,3 @@
 </body>
 
 </html>
-@livewire('registros')
