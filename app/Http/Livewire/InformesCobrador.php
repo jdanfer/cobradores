@@ -494,38 +494,36 @@ class InformesCobrador extends Component
                 $sheet = $spreadsheet->getActiveSheet();
 
                 // Establecer encabezados
-                $sheet->setCellValue('A1', 'Fecha');
-                $sheet->setCellValue('B1', 'Matricula');
-                $sheet->setCellValue('C1', 'Recibo');
-                $sheet->setCellValue('D1', 'Nombre');
-                $sheet->setCellValue('E1', 'Cédula');
-                $sheet->setCellValue('F1', 'Color');
+                $sheet->setCellValue('C1', 'Informe de Historial de Informes');
+
+                $sheet->setCellValue('A2', 'Fecha');
+                $sheet->setCellValue('B2', 'Hora');
+                $sheet->setCellValue('C2', 'Usuario');
+                $sheet->setCellValue('D2', 'Acción');
 
                 // Estilo para encabezados (opcional)
-                $sheet->getStyle('A1:F1')->getFont()->setBold(true);
+                $sheet->getStyle('C1')->getFont()->setBold(true);
+
+                $sheet->getStyle('A2:D2')->getFont()->setBold(true);
 
                 // Llenar datos
-                $row = 2;
-                foreach ($registros as $color => $grupo) {
-                    foreach ($grupo as $registro) {
-                        $sheet->setCellValue('A' . $row, date('d-m-Y', strtotime($registro->fecha)));
-                        $sheet->setCellValue('B' . $row, $registro->matricula);
-                        $sheet->setCellValue('C' . $row, $registro->nrorec);
-                        $sheet->setCellValue('D' . $row, $registro->nombre);
-                        $sheet->setCellValue('E' . $row, $registro->usuario_ced);
-                        $sheet->setCellValue('F' . $row, $registro->color);
-                        $row++;
-                    }
+                $row = 3;
+                foreach ($registros as $registro) {
+                    $sheet->setCellValue('A' . $row, date('d-m-Y', strtotime($registro->fecha)));
+                    $sheet->setCellValue('B' . $row, $registro->hora);
+                    $sheet->setCellValue('C' . $row, $registro->usuario);
+                    $sheet->setCellValue('D' . $row, $registro->obs);
+                    $row++;
                 }
 
                 // Ajustar ancho de columnas automáticamente
-                foreach (range('A', 'F') as $col) {
+                foreach (range('A', 'D') as $col) {
                     $sheet->getColumnDimension($col)->setAutoSize(true);
                 }
 
                 // Generar archivo
                 $writer = new WriterXlsx($spreadsheet);
-                $filename = 'cobrados_' . date('YmdHis') . '.xlsx';
+                $filename = 'historial_' . date('YmdHis') . '.xlsx';
                 $temp_file = tempnam(sys_get_temp_dir(), $filename);
 
                 $writer->save($temp_file);
@@ -534,6 +532,74 @@ class InformesCobrador extends Component
             } else {
                 session()->flash('messageerror', 'No hay registros cobrados.');
             }
+        }
+
+        if ($this->seleccion_cob == "porcentajes") {
+            $spreadsheet = new Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+            $meshoy = Emision::where('nro', '>', 0)->first();
+            $elmesarq = $meshoy->mesarq;
+            if (strlen($elmesarq) == 7) {
+                $mes = substr($elmesarq, 0, 2);
+                $anio = substr($elmesarq, 3, 4);
+            } else {
+                $mes = substr($elmesarq, 0, 1);
+                $anio = substr($elmesarq, 2, 4);
+            }
+            // Establecer encabezados
+
+            $sheet->getStyle('A1:E1')->getFont()->setBold(true);
+
+            $sheet->setCellValue('B1', 'DEPARTAMENTO TI SAPP S.A.');
+            $sheet->setCellValue('E1', 'Fecha: ' . date('d-m-Y'));
+
+            $sheet->getStyle('A2:E2')->getFont()->setBold(true);
+
+            $sheet->setCellValue('B2', 'Informe de porcentaje de cobranza por cobrador');
+            $sheet->setCellValue('E2', 'ARQUEO ' . $mes . '-' . $anio);
+
+            $sheet->getStyle('A4:F4')->getFont()->setBold(true);
+            $sheet->setCellValue('A4', 'Número');
+            $sheet->setCellValue('B4', 'Nombre');
+            $sheet->setCellValue('C4', 'Cobrado $.');
+            $sheet->setCellValue('D4', 'Tot.Recibos');
+            $sheet->setCellValue('E4', 'Porcentaje');
+            $sheet->setCellValue('F4', 'Tot.Emisión');
+
+            $loscobradores = User::whereIn('escobrador', [1])->whereNotIn('hcerol_id', [1])->orderBy('name')->get();
+            $row = 5;
+
+            foreach ($loscobradores as $cobrador) {
+                $totalCobrado = Emision::where('cob', $cobrador->cod_sapp)->where('arqueo', 'C')->where('mes', $mes)->where('ano', $anio)->sum('total');
+                $cantidadRecibos = Emision::where('cob', $cobrador->cod_sapp)->where('arqueo', 'C')->where('mes', $mes)->where('ano', $anio)->count();
+                $totalemision = Emision::where('cob', $cobrador->cod_sapp)->where('mes', $mes)->where('ano', $anio)->count();
+                if ($totalemision > 0) {
+                    $porcentaje = ($cantidadRecibos / ($totalemision * 100)) * 100;
+                } else {
+                    $porcentaje = 0;
+                }
+                $sheet->setCellValue('A' . $row, $cobrador->cod_sapp);
+                $sheet->setCellValue('B' . $row, $cobrador->name);
+                $sheet->setCellValue('C' . $row, number_format($totalCobrado, 2, ',', '.'));
+                $sheet->setCellValue('D' . $row, $cantidadRecibos);
+                $sheet->setCellValue('E' . $row, number_format($porcentaje, 2, ',', '.') . '%');
+                $sheet->setCellValue('F' . $row, $totalemision);
+                $row++;
+            }
+
+            // Ajustar ancho de columnas automáticamente
+            foreach (range('A', 'F') as $col) {
+                $sheet->getColumnDimension($col)->setAutoSize(true);
+            }
+
+            // Generar archivo
+            $writer = new WriterXlsx($spreadsheet);
+            $filename = 'porcentajes_' . date('YmdHis') . '.xlsx';
+            $temp_file = tempnam(sys_get_temp_dir(), $filename);
+
+            $writer->save($temp_file);
+
+            return response()->download($temp_file, $filename)->deleteFileAfterSend(true);
         }
 
         if ($this->seleccion_cob == "Cobrados") {

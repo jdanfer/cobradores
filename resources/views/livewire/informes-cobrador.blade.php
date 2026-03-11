@@ -91,11 +91,19 @@
                         </div>
                     </div>
                     <div class="col-lg-2 col-md-8 pt-3">
-                        <button type="button" id="btnProcesarPdf" class="btn btn-primary" data-toggle="tooltip"
-                            data-placement="right" title="Emitir informe seleccionado a pdf"
-                            wire:click="informeCobrador">Procesar pdf
-                            <i class="fas fa-file-pdf"></i>
-                        </button>
+                        @if ($seleccion_cob == 'porcentajes' || $seleccion_cob == 'historial')
+                            <button type="button" id="btnProcesarPdf" class="btn btn-primary" data-toggle="tooltip"
+                                data-placement="right" disabled title="Emitir informe seleccionado a pdf"
+                                wire:click="informeCobrador">Procesar pdf
+                                <i class="fas fa-file-pdf"></i>
+                            </button>
+                        @else
+                            <button type="button" id="btnProcesarPdf" class="btn btn-primary" data-toggle="tooltip"
+                                data-placement="right" title="Emitir informe seleccionado a pdf"
+                                wire:click="informeCobrador">Procesar pdf
+                                <i class="fas fa-file-pdf"></i>
+                            </button>
+                        @endif
                     </div>
                     <div class="col-lg-2 col-md-8 pt-3">
                         @if (
@@ -111,9 +119,9 @@
                                 <i class="fas fa-file-excel"></i>
                             </button>
                         @else
-                            <button type="button" id="btnProcesarExcel" class="btn btn-success" data-toggle="tooltip"
-                                data-placement="right" title="Emitir informe seleccionado a excel"
-                                wire:click="procesarExcel">Procesar excel
+                            <button type="button" id="btnProcesarExcel" class="btn btn-success"
+                                data-toggle="tooltip" data-placement="right"
+                                title="Emitir informe seleccionado a excel" wire:click="procesarExcel">Procesar excel
                                 <i class="fas fa-file-excel"></i>
                             </button>
                         @endif
