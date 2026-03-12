@@ -756,6 +756,13 @@
     @endif
 
     <script>
+        window.addEventListener('abrir-pdf', event => {
+
+            let url = event.detail.url;
+
+            window.open(url, '_blank');
+
+        });
         // Listener para confirmar impresión desde el modal
         window.addEventListener('confirmar-impresion', event => {
             Swal.fire({

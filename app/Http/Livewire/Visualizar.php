@@ -9,6 +9,7 @@ use App\Models\Cob_filtro;
 use App\Models\Cob_motivo;
 use App\Models\deuda;
 use App\Models\Emision;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -499,9 +500,11 @@ class Visualizar extends Component
                 'iva' => number_format($emision->iva, 2, ',', '.'),
                 'total' => number_format($emision->total, 2, ',', '.'),
             ];
-
-            $this->dispatchBrowserEvent('imprimir-ticket-arq', ['datos' => $datosTicket]);
-
+            $url = $this->generarPdfTicket80($datosTicket);
+            /// hoy 12/3 $this->dispatchBrowserEvent('imprimir-ticket-arq', ['datos' => $datosTicket]);
+            $this->dispatchBrowserEvent('abrir-pdf', [
+                'url' => $url
+            ]);
             $this->mensajeExito = 'Ticket impreso correctamente';
         } else {
             $this->mensajeError = 'Error al actualizar la emisión';
@@ -558,9 +561,12 @@ class Visualizar extends Component
             'iva' => number_format($emision->iva, 2, ',', '.'),
             'total' => number_format($emision->total, 2, ',', '.'),
         ];
-
+        $url = $this->generarPdfTicket80($datosTicket);
+        $this->dispatchBrowserEvent('abrir-pdf', [
+            'url' => $url
+        ]);
         // Emitir evento para JavaScript que maneja la impresora térmica
-        $this->dispatchBrowserEvent('imprimir-ticket-termica', ['datos' => $datosTicket]);
+        ///modif 12/3        $this->dispatchBrowserEvent('imprimir-ticket-termica', ['datos' => $datosTicket]);
 
         $this->mensajeExito = 'Enviando ticket a impresora...';
         $this->cerrarModal();
@@ -767,5 +773,25 @@ class Visualizar extends Component
         } else {
             $this->mensajeError = 'Registro no encontrado';
         }
+    }
+
+    public function generarPdfTicket80($datos)
+    {
+
+        $pdf = Pdf::loadView('pdf.ticket80', [
+            'datos' => $datos
+        ]);
+
+        // tamaño real ticket 80mm
+        //        $pdf->setPaper([0, 0, 226.77, 800]);
+        //        $pdf->setPaper([0, 0, 210, 800]);
+        $pdf->setPaper([0, 0, 226.77, 900]);
+        $nombre = 'ticket_' . time() . '.pdf';
+
+        $ruta = storage_path('app/public/' . $nombre);
+
+        $pdf->save($ruta);
+
+        return asset('storage/' . $nombre);
     }
 }

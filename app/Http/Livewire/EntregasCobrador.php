@@ -56,6 +56,12 @@ class EntregasCobrador extends Component
 
     public function ingresarEntrega()
     {
+        if (auth()->user()->hcerol_id != 1) {
+            $this->cobrador_id = auth()->user()->cod_sapp;
+        } else {
+            $this->cobrador_id = $this->cobrador_id;
+        }
+
         if (!$this->cobrador_id) {
             $this->mensajeError = 'Debe seleccionar un cobrador';
             return;
