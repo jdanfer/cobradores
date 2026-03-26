@@ -5,14 +5,18 @@ namespace App\Http\Livewire;
 use App\Http\Controllers\Cob_mutual;
 use App\Models\Abm_arqueo;
 use App\Models\Cliente;
+use App\Models\Cob_comision;
 use App\Models\Cob_entrega;
 use App\Models\Cob_inf;
 use App\Models\Cob_mutuales;
 use App\Models\Emi0725;
+use App\Models\Deuda;
 use App\Models\Emision;
+use App\Models\Linmmdd;
 use App\Models\User;
 use Livewire\Component;
 use Barryvdh\DomPDF\Facade\Pdf;
+use DateTime;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\Reader\Xlsx;
@@ -22,7 +26,7 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx as WriterXlsx;
 class InformesCobrador extends Component
 {
     public $seleccion_cob;
-    public $detalle, $totalCobrado, $totalEntregado, $totalDif, $totalComision, $totalMutual, $totalOtras;
+    public $detalle, $totalCobrado, $totalEntregado, $totalDif, $totalComision, $totalMutual;
     public $cobradores, $cobrador_id, $totalVigilia, $totalGeneral, $historico, $mes, $anio;
     public function mount()
     {
@@ -217,6 +221,7 @@ class InformesCobrador extends Component
                             ->where('cob', $this->cobrador_id)->first();
                         $this->totalMutual = Cob_mutuales::where('cobrador', $this->cobrador_id)->where('arqueo', $elmes->mesarq)->whereNull('vigilia')->sum('pesos');
                         $this->totalVigilia = Cob_mutuales::where('cobrador', $this->cobrador_id)->where('arqueo', $elmes->mesarq)->whereIn('vigilia', [1])->sum('pesos');
+                        $totalOtras = Cob_comision::where('cobrador', $this->cobrador_id)->where('arqueo', $elmes->mesarq)->sum('pesos');
                         $this->totalCobrado = (new Emi0725)
                             ->setTable($meshistorico)
                             ->where('cob', $this->cobrador_id)
@@ -228,7 +233,8 @@ class InformesCobrador extends Component
                         $totalComision = $this->totalCobrado * 0.07;
                         $totalComisionMutual = $this->totalMutual * 0.0315;
                         $totalComisionVigilia = $this->totalVigilia * 0.0315;
-                        $totalComisionTot = $totalComision + $totalComisionMutual + $totalComisionVigilia;
+                        $totalComisionTot = $totalComision + $totalComisionMutual + $totalComisionVigilia + $totalOtras;
+                        $nombrecobrador = User::where('cod_sapp', $this->cobrador_id)->first();
                         $pdf = PDF::loadView('livewire.reporte-resumen-cob', [
                             'totalCobrado' => $this->totalCobrado,
                             'totalMutual' => $this->totalMutual,
@@ -242,6 +248,8 @@ class InformesCobrador extends Component
                             'totalTotComision' => $totalComisionTot,
                             'totalcomisionmutual' => $totalComisionMutual,
                             'totalcomisionvigilia' => $totalComisionVigilia,
+                            'totalOtras' => $totalOtras,
+                            'nombrecobrador' => $nombrecobrador->name,
                         ])->setPaper('a4', 'portrait');
                         // Para descargar directamente
                         return response()->streamDownload(function () use ($pdf) {
@@ -253,7 +261,7 @@ class InformesCobrador extends Component
                             ->first();
                         $this->totalMutual = Cob_mutuales::where('cobrador', $this->cobrador_id)->where('arqueo', $elmes->mesarq)->whereNull('vigilia')->sum('pesos');
                         $this->totalVigilia = Cob_mutuales::where('cobrador', $this->cobrador_id)->where('arqueo', $elmes->mesarq)->whereIn('vigilia', [1])->sum('pesos');
-
+                        $totalOtras = Cob_comision::where('cobrador', $this->cobrador_id)->where('arqueo', $elmes->mesarq)->sum('pesos');
                         $this->totalCobrado = Emision::where('cob', $this->cobrador_id)
                             ->where('arqueo', 'C')->sum('total');
                         $this->totalEntregado = Cob_entrega::where('cobrador', $this->cobrador_id)->where('arqueo', $elmes->mesarq)->whereIn('valida', [1])
@@ -263,7 +271,8 @@ class InformesCobrador extends Component
                         $totalComision = $this->totalCobrado * 0.07;
                         $totalComisionMutual = $this->totalMutual * 0.0315;
                         $totalComisionVigilia = $this->totalVigilia * 0.0315;
-                        $totalComisionTot = $totalComision + $totalComisionMutual + $totalComisionVigilia;
+                        $totalComisionTot = $totalComision + $totalComisionMutual + $totalComisionVigilia + $totalOtras;
+                        $nombrecobrador = User::where('cod_sapp', $this->cobrador_id)->first();
                         $pdf = PDF::loadView('livewire.reporte-resumen-cob', [
                             'totalCobrado' => $this->totalCobrado,
                             'totalMutual' => $this->totalMutual,
@@ -277,6 +286,8 @@ class InformesCobrador extends Component
                             'totalTotComision' => $totalComisionTot,
                             'totalcomisionmutual' => $totalComisionMutual,
                             'totalcomisionvigilia' => $totalComisionVigilia,
+                            'totalOtras' => $totalOtras,
+                            'nombrecobrador' => $nombrecobrador->name,
                         ])->setPaper('a4', 'portrait');
                         // Para descargar directamente
                         return response()->streamDownload(function () use ($pdf) {
@@ -547,6 +558,12 @@ class InformesCobrador extends Component
                 $anio = substr($elmesarq, 2, 4);
             }
             // Establecer encabezados
+            if ($mes < 10) {
+                $fechaentexto = "01" . "/0" . $mes . "/" . $anio;
+            }
+            $fechainicial = new DateTime($fechaentexto);
+            $fechafin = new DateTime($fechaentexto);
+            $fechafin->modify('last day of this month');
 
             $sheet->getStyle('A1:E1')->getFont()->setBold(true);
 
@@ -563,32 +580,68 @@ class InformesCobrador extends Component
             $sheet->setCellValue('B4', 'Nombre');
             $sheet->setCellValue('C4', 'Cobrado $.');
             $sheet->setCellValue('D4', 'Tot.Recibos');
-            $sheet->setCellValue('E4', 'Porcentaje');
-            $sheet->setCellValue('F4', 'Tot.Emisión');
+            $sheet->setCellValue('E4', 'Rec.Base');
+            $sheet->setCellValue('F4', '$. Base');
+            $sheet->setCellValue('G4', 'Rec.RedPagos');
+            $sheet->setCellValue('H4', '$. Redpagos');
+            $sheet->setCellValue('I4', 'Rec.Sistarbanc');
+            $sheet->setCellValue('J4', '$. Sistarbanc');
+
+            $sheet->setCellValue('K4', '% Cobrador');
+            $sheet->setCellValue('L4', 'Tot.Emisión');
+            $sheet->setCellValue('M4', '% Cobrador $');
+            $sheet->setCellValue('N4', '% Total Cant.');
+            $sheet->setCellValue('O4', '% Total $.');
 
             $loscobradores = User::whereIn('escobrador', [1])->whereNotIn('hcerol_id', [1])->orderBy('name')->get();
             $row = 5;
-
             foreach ($loscobradores as $cobrador) {
-                $totalCobrado = Emision::where('cob', $cobrador->cod_sapp)->where('arqueo', 'C')->where('mes', $mes)->where('ano', $anio)->sum('total');
-                $cantidadRecibos = Emision::where('cob', $cobrador->cod_sapp)->where('arqueo', 'C')->where('mes', $mes)->where('ano', $anio)->count();
+                $totalCobrado = Emision::where('cob', $cobrador->cod_sapp)->where('arqueo', 'C')->where('mes', $mes)->where('ano', $anio)->whereNull('pagoenrp')->whereNull('pagoensist')->sum('total');
+                $cantidadRecibos = Emision::where('cob', $cobrador->cod_sapp)->where('arqueo', 'C')->where('mes', $mes)->where('ano', $anio)->whereNull('pagoenrp')->whereNull('pagoensist')->count();
                 $totalemision = Emision::where('cob', $cobrador->cod_sapp)->where('mes', $mes)->where('ano', $anio)->count();
+                $totalemisionPesos = Emision::where('cob', $cobrador->cod_sapp)->where('mes', $mes)->where('ano', $anio)->sum('total');
+                $totalcantbasecob = Linmmdd::where('fecha', '>=', $fechainicial)->where('fecha', '<=', $fechafin)->where('cod_prod', 999)->where('GRUPO', $cobrador->cod_sapp)->where('MES_PAGA', $mes)->where('ANO_PAGA', $anio)->count();
+                $totalpesosbasecob = Linmmdd::where('fecha', '>=', $fechainicial)->where('fecha', '<=', $fechafin)->where('cod_prod', 999)->where('GRUPO', $cobrador->cod_sapp)->where('MES_PAGA', $mes)->where('ANO_PAGA', $anio)->sum('TOT_LIN');
+                $totalcantredpagos = Emision::where('cob', $cobrador->cod_sapp)->where('mes', $mes)->where('ano', $anio)->whereNotNull('pagoenrp')->count();
+                $totalpesosredpagos = Emision::where('cob', $cobrador->cod_sapp)->where('mes', $mes)->where('ano', $anio)->whereNotNull('pagoenrp')->sum('total');
+                $totalcantsistar = Emision::where('cob', $cobrador->cod_sapp)->where('mes', $mes)->where('ano', $anio)->whereNotNull('pagoensist')->count();
+                $totalpesossistar = Emision::where('cob', $cobrador->cod_sapp)->where('mes', $mes)->where('ano', $anio)->whereNotNull('pagoensist')->sum('total');
+
                 if ($totalemision > 0) {
+                    $cantidadRecibos = $cantidadRecibos - $totalcantbasecob - $totalcantredpagos - $totalcantsistar;
+                    $totalcobradoPesos = $totalCobrado - $totalpesosbasecob - $totalpesosredpagos - $totalpesossistar; 
                     $porcentaje = ($cantidadRecibos / ($totalemision * 100)) * 100;
+                    $porcentajePesos = ($totalcobradoPesos / ($totalemisionPesos * 100)) * 100;
+                    $cantidadTotalRec = $cantidadRecibos;
+                    $totalPesosTotal = $totalcobradoPesos;
+                    $porcentajeTotalTot = ($cantidadTotalRec / ($totalemision * 100)) * 100;
+                    $porcentajePesosTot = ($totalPesosTotal / ($totalemisionPesos * 100)) * 100;
                 } else {
                     $porcentaje = 0;
+                    $porcentajePesos = 0;
+                    $porcentajeTotalTot = 0;
+                    $porcentajePesosTot = 0;
                 }
                 $sheet->setCellValue('A' . $row, $cobrador->cod_sapp);
                 $sheet->setCellValue('B' . $row, $cobrador->name);
                 $sheet->setCellValue('C' . $row, number_format($totalCobrado, 2, ',', '.'));
                 $sheet->setCellValue('D' . $row, $cantidadRecibos);
-                $sheet->setCellValue('E' . $row, number_format($porcentaje, 2, ',', '.') . '%');
-                $sheet->setCellValue('F' . $row, $totalemision);
+                $sheet->setCellValue('E' . $row, $totalcantbasecob);
+                $sheet->setCellValue('F' . $row, number_format($totalpesosbasecob, 2, ',', '.'));
+                $sheet->setCellValue('G' . $row, $totalcantredpagos);
+                $sheet->setCellValue('H' . $row, number_format($totalpesosredpagos, 2, ',', '.'));
+                $sheet->setCellValue('I' . $row, $totalcantsistar);
+                $sheet->setCellValue('J' . $row, number_format($totalpesossistar, 2, ',', '.'));
+                $sheet->setCellValue('K' . $row, number_format($porcentaje, 2, ',', '.') . '%');
+                $sheet->setCellValue('L' . $row, $totalemision);
+                $sheet->setCellValue('M' . $row, number_format($porcentajePesos, 2, ',', '.') . '%');
+                $sheet->setCellValue('N' . $row, number_format($porcentajeTotalTot, 2, ',', '.') . '%');
+                $sheet->setCellValue('O' . $row, number_format($porcentajePesosTot, 2, ',', '.') . '%');
                 $row++;
             }
 
             // Ajustar ancho de columnas automáticamente
-            foreach (range('A', 'F') as $col) {
+            foreach (range('A', 'O') as $col) {
                 $sheet->getColumnDimension($col)->setAutoSize(true);
             }
 
@@ -652,6 +705,57 @@ class InformesCobrador extends Component
                 return response()->download($temp_file, $filename)->deleteFileAfterSend(true);
             } else {
                 session()->flash('messageerror', 'No hay registros cobrados.');
+            }
+        }
+
+        if ($this->seleccion_cob == "devolcobranza") {
+            $registros = Deuda::where('desdeapp', 'Devolución Cobranza')->where('fecha_anula', '>=', $fechadesde)->get();
+            if ($registros->count() > 0) {
+                $spreadsheet = new Spreadsheet();
+                $sheet = $spreadsheet->getActiveSheet();
+
+                // Establecer encabezados
+                $sheet->setCellValue('C1', 'Informe devolución de cobranza');
+
+                $sheet->setCellValue('A2', 'Fecha');
+                $sheet->setCellValue('B2', 'Matrícula');
+                $sheet->setCellValue('C2', 'Nombre');
+                $sheet->setCellValue('D2', 'Importe');
+                $sheet->setCellValue('E2', 'Nro.Documento');
+                $sheet->setCellValue('F2', 'Cobrador');
+
+                // Estilo para encabezados (opcional)
+                $sheet->getStyle('C1')->getFont()->setBold(true);
+
+                $sheet->getStyle('A2:F2')->getFont()->setBold(true);
+
+                // Llenar datos
+                $row = 3;
+                foreach ($registros as $registro) {
+                    $sheet->setCellValue('A' . $row, date('d-m-Y', strtotime($registro->fecha_anula)));
+                    $sheet->setCellValue('B' . $row, $registro->CLIENTE);
+                    $sheet->setCellValue('C' . $row, $registro->nombre);
+                    $sheet->setCellValue('D' . $row, $registro->TOTAL);
+                    $sheet->setCellValue('E' . $row, $registro->DOCUMENTO);
+                    $sheet->setCellValue('F' . $row, $registro->NRO_COBR);
+                    $row++;
+                }
+
+                // Ajustar ancho de columnas automáticamente
+                foreach (range('A', 'F') as $col) {
+                    $sheet->getColumnDimension($col)->setAutoSize(true);
+                }
+
+                // Generar archivo
+                $writer = new WriterXlsx($spreadsheet);
+                $filename = 'anulaciones_' . date('YmdHis') . '.xlsx';
+                $temp_file = tempnam(sys_get_temp_dir(), $filename);
+
+                $writer->save($temp_file);
+
+                return response()->download($temp_file, $filename)->deleteFileAfterSend(true);
+            } else {
+                session()->flash('messageerror', 'No hay registros.');
             }
         }
 

@@ -125,6 +125,16 @@
     <table border="1" style="width: 100%; margin-top: 10px">
         <tr style="background-color: #d0d0d0; font-size: 10pt">
             <td style="width: 50%; text-align: right; padding: 7px">
+                <strong>Otra comisión:</strong>
+            </td>
+            <td style="width: 50%; text-align: right; padding: 7px">
+                <strong>$ {{ number_format($totalOtras, 2, ',', '.') }}</strong>
+            </td>
+        </tr>
+    </table>
+    <table border="1" style="width: 100%; margin-top: 10px">
+        <tr style="background-color: #d0d0d0; font-size: 10pt">
+            <td style="width: 50%; text-align: right; padding: 7px">
                 <strong>Comisión TOTAL:</strong>
             </td>
             <td style="width: 50%; text-align: right; padding: 7px">
@@ -133,4 +143,10 @@
         </tr>
     </table>
 
+    <br>
+    <div>
+        <p>--------------------------------</p>
+        <p>Firma del Cobrador</p>
+        {{ $nombrecobrador }}</p>
+    </div>
 </div>

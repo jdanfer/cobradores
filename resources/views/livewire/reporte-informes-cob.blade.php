@@ -32,11 +32,14 @@
 
     @php
         $totalGeneral = 0;
+        $cantidadtotal = 0;
     @endphp
 
     @foreach ($registros as $color => $grupo)
         @php
             $subtotal = 0;
+            $cantidadcolor = count($grupo);
+            $cantidadtotal += $cantidadcolor;
             $grupoArray = $grupo->toArray();
         @endphp
 
@@ -126,8 +129,8 @@
         <!-- Subtotal del Color -->
         <table border="1" style="width: 100%; margin-bottom: 10px">
             <tr style="background-color: #f9f9f9; font-size: 9pt">
-                <td style="width: 70%; text-align: right; padding: 5px">
-                    <strong>Subtotal Color {{ $color }}:</strong>
+                <td style="width: 70%; text-align: left; padding: 5px">
+                    <strong>Subtotal Color {{ $color }}: </strong> {{ $cantidadcolor }}
                 </td>
                 <td style="width: 30%; text-align: right; padding: 5px">
                     <strong>$ {{ number_format($subtotal, 2, ',', '.') }}</strong>
@@ -143,8 +146,8 @@
     <!-- Total General -->
     <table border="1" style="width: 100%; margin-top: 10px">
         <tr style="background-color: #d0d0d0; font-size: 10pt">
-            <td style="width: 70%; text-align: right; padding: 7px">
-                <strong>TOTAL GENERAL:</strong>
+            <td style="width: 70%; text-align: left; padding: 7px">
+                <strong>TOTAL GENERAL: </strong> {{ $cantidadtotal }}
             </td>
             <td style="width: 30%; text-align: right; padding: 7px">
                 <strong>$ {{ number_format($totalGeneral, 2, ',', '.') }}</strong>

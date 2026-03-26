@@ -61,9 +61,10 @@
         <div class="center">
 
             <b>SAPP SOCIEDAD ANONIMA</b><br>
-            {{ $datos['tipocobro'] ?? 'RECIBO' }}<br>
-
-            Referencia:<br>
+            <b>RUT:</b>211929570012<br>
+            <b>Domicilio:</b>Zorrilla s/n -Salinas, Canelones<br>
+            <hr>
+            F.Pago:{{ $datos['forma_pago'] ?? 'CREDITO' }}<br>
             {{ $datos['tipofactura'] }} Serie: {{ $datos['serie'] }}<br>
             Número: {{ $datos['numero'] }}
 
@@ -71,16 +72,19 @@
 
         <hr>
 
-        Cliente:<br>
+        Cliente:{{ $datos['nroidentif'] }}<br>
         {{ $datos['cliente'] }}<br>
         {{ $datos['direccion'] }}<br>
         Tel: {{ $datos['telefono'] }}
 
         <hr>
-
-        Periodo: {{ $datos['fecha'] }}<br>
-        Días cobro: {{ $datos['dias_cobro'] }}
-
+        @if ($datos['tipofactura'] == 'FACTURA')
+            {{ $datos['consumidor'] }} <br>
+            RUT: {{ $datos['rut'] }}<br>
+        @else
+            CONSUMIDOR FINAL<br>
+            Otro: {{ $datos['nroidentif'] }} <br>
+        @endif
         <hr>
 
         <table class="tabla">
@@ -122,19 +126,25 @@
             </tr>
 
         </table>
-
         <hr>
-
-        Cobrado por:<br>
-        {{ auth()->user()->name }}
-
+        <table class="tabla total">
+            <tr>
+                <img style="width: 100px; height:80" src="vendor/adminlte/dist/img/qr.png" />
+            </tr>
+        </table>
         <hr>
-
+        Cód.Seg: {{ $datos['codigoseg'] }}<br>
+        Res.Nro: 2170/2016
+        CAE: {{ $datos['nrocae'] }}<br>
+        Vencimiento: {{ $datos['vencimientocae'] }}
+        <hr>
+        Adenda:<br>
         <div class="center">
-
-            Gracias por preferirnos
-
+            Empresa afiliada al Clearing de Informes.
+            Este pago no cancela deudas anteriores.
+            Sitio web: www.sapp.com.uy
         </div>
+        <hr>
 
     </div>
 

@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Auth;
 
 Auth::routes(['register' => false]);
 ///Auth::routes();
-
+Route::get('/test-cfe', [App\Http\Controllers\CfeController::class, 'enviarCFE']);
 Route::group(['middleware' => 'auth'], function () {
     Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
     Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');

@@ -31,7 +31,7 @@ class CobranzaResumen extends Component
     {
         $this->cobradores = User::whereIn('escobrador', [1])->orderBy('name')->get();
         $this->filtros = Cob_filtro::whereIn('id', [1, 2, 7, 8])->get();
-        $this->motivos = Cob_motivo::all();
+        $this->motivos = Cob_motivo::whereIn('opcion', [1])->get();
     }
 
     public function render()
@@ -86,6 +86,7 @@ class CobranzaResumen extends Component
         if (isset($deudap)) {
             $deudap->fecha_pago = null;
             $deudap->desdeapp = "Devolución Cobranza";
+            $deudap->fecha_anula = date('Y-m-d');
             $deudap->save();
         }
         $historial = new Abm_arqueo();

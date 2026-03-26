@@ -86,12 +86,13 @@
                                 @if (auth()->user()->hcerol_id == 1)
                                     <option value="porcentajes">Porcentajes de cobranza</option>
                                     <option value="historial">Historial informes</option>
+                                    <option value="devolcobranza">Devolución cobranza</option>
                                 @endif
                             </select>
                         </div>
                     </div>
                     <div class="col-lg-2 col-md-8 pt-3">
-                        @if ($seleccion_cob == 'porcentajes' || $seleccion_cob == 'historial')
+                        @if ($seleccion_cob == 'porcentajes' || $seleccion_cob == 'historial' || $seleccion_cob == 'devolcobranza')
                             <button type="button" id="btnProcesarPdf" class="btn btn-primary" data-toggle="tooltip"
                                 data-placement="right" disabled title="Emitir informe seleccionado a pdf"
                                 wire:click="informeCobrador">Procesar pdf

@@ -121,6 +121,18 @@
                     </button>
                 </div>
             </div>
+            @if ($mapaFiltroNro)
+                <div class="col-lg-3 col-md-8">
+                    <div class="alert alert-warning py-1 px-2 mb-0 d-flex align-items-center"
+                        style="font-size:0.85rem;">
+                        <i class="fas fa-map-marker-alt mr-1 text-danger"></i>
+                        <span>Filtrado por mapa</span>
+                        <button wire:click="limpiarFiltroMapa" class="btn btn-sm btn-outline-danger ml-2 py-0">
+                            <i class="fas fa-times"></i> Limpiar
+                        </button>
+                    </div>
+                </div>
+            @endif
             <div class="col-lg-4 col-md-8">
                 <div class="custom-control custom-switch">
                     <input type="checkbox" class="custom-control-input" name="grupof" wire:model="grupof"
@@ -185,7 +197,8 @@
                         </thead>
                         <tbody>
                             @forelse($registros as $index => $registro)
-                                <tr>
+                                <tr class="{{ $mapaFiltroNro == $registro->nro ? 'table-warning' : '' }}"
+                                    id="registro-{{ $registro->nro }}">
                                     <td>
                                         <input type="number" min="0" max="30"
                                             wire:model.defer="desde.{{ $registro->nro }}"
@@ -350,7 +363,12 @@
                                     <p class="mb-2"><strong>${registro.nombre}</strong></p>
                                     <p class="mb-1"><strong>Teléfonos:</strong> ${registro.tel_cli}</p>
                                     <p class="mb-1"><strong>Fec.Cobro:</strong> ${registro.dia1} al ${registro.dia2}</p>
-                                    <p class="mb-0"><strong>Dirección:</strong> ${registro.direccion}</p>
+                                    <p class="mb-1"><strong>Total:</strong> $${registro.total}</p>
+                                    <p class="mb-1"><strong>Dirección:</strong> ${registro.direccion}</p>
+                                    <button onclick="filtrarPorMarcador(${registro.nro})"
+                                        class="btn btn-sm btn-primary mt-1 w-100">
+                                        <i class="fas fa-filter"></i> Ubicar en tabla
+                                    </button>
                                 </div>
                             `);
 
@@ -383,6 +401,34 @@
         </script>
     @endif
     <script>
+        // Filtrar tabla desde el mapa
+        function filtrarPorMarcador(nro) {
+            @this.call('seleccionarMarcador', nro);
+            // Scroll a la tabla después de que Livewire actualice
+            setTimeout(function() {
+                var tabla = document.querySelector('.card .table-responsive');
+                if (tabla) {
+                    tabla.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            }, 400);
+        }
+
+        // Resaltar fila seleccionada después de actualizaciones de Livewire
+        document.addEventListener('livewire:update', function() {
+            var filaSeleccionada = document.querySelector('tr.table-warning');
+            if (filaSeleccionada) {
+                setTimeout(function() {
+                    filaSeleccionada.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center'
+                    });
+                }, 200);
+            }
+        });
+
         window.addEventListener('imprime-cobro', event => {
             Swal.fire({
                 title: `¿Confirma cobro a: ${event.detail.nombre}?`,
@@ -576,7 +622,7 @@
                 <p>Cobrador por:${datos.usuariocob}</p>
                 <p>${datos.adenda}</p>
                 
-                <p class="center">Gracias por preferirnos</p>
+                <p class="center">Gracias por preferirnos REC</p>
                 <p class="center" style="font-size: 10px;">www.sapp.com.uy</p>
                 
                 <br><br>

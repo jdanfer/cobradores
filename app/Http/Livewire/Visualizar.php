@@ -30,6 +30,7 @@ class Visualizar extends Component
     public $facturaSeleccionada = null;
     public $detalleFactura = [];
     public $registrosIds = []; // Cambio: almacenar solo IDs
+    public $mapaFiltroNro = null; // Filtro por marcador del mapa
 
     public $modalMotivo = false;
     public $tipoAccion = ''; // 'baja' o 'devolucion'
@@ -97,6 +98,9 @@ class Visualizar extends Component
                     }
                 }
             }
+        }
+        if ($this->mapaFiltroNro) {
+            $query->where('nro', $this->mapaFiltroNro);
         }
         if ($this->grupof) {
             $query->orderBy('grupof', 'desc');
@@ -561,7 +565,7 @@ class Visualizar extends Component
             'iva' => number_format($emision->iva, 2, ',', '.'),
             'total' => number_format($emision->total, 2, ',', '.'),
         ];
-        $url = $this->generarPdfTicket80($datosTicket);
+        $url = $this->generarPdfTicket80Gfe($datosTicket);
         $this->dispatchBrowserEvent('abrir-pdf', [
             'url' => $url
         ]);
@@ -663,6 +667,7 @@ class Visualizar extends Component
             return $registro->latitud !== null && $registro->longitud !== null;
         })->map(function ($registro) {
             return [
+                'nro' => $registro->nro,
                 'lat' => (float) $registro->latitud,
                 'lng' => (float) $registro->longitud,
                 'nombre' => $registro->nombre,
@@ -680,6 +685,30 @@ class Visualizar extends Component
     public function updatingPerPage()
     {
         $this->resetPage();
+    }
+
+    public function seleccionarMarcador($nro)
+    {
+        $this->mapaFiltroNro = $nro;
+        $this->resetPage();
+        if ($this->mostrarMapa) {
+            $this->dispatchBrowserEvent('mapa-actualizado', [
+                'markersData' => $this->markers_data,
+                'primeraUbicacion' => $this->primeraUbicacion
+            ]);
+        }
+    }
+
+    public function limpiarFiltroMapa()
+    {
+        $this->mapaFiltroNro = null;
+        $this->resetPage();
+        if ($this->mostrarMapa) {
+            $this->dispatchBrowserEvent('mapa-actualizado', [
+                'markersData' => $this->markers_data,
+                'primeraUbicacion' => $this->primeraUbicacion
+            ]);
+        }
     }
 
     public function updatingFiltroId()
@@ -794,4 +823,25 @@ class Visualizar extends Component
 
         return asset('storage/' . $nombre);
     }
-}
+
+    public function generarPdfTicket80Gfe($datos)
+    {
+
+        $pdf = Pdf::loadView('pdf.ticket80Gfe', [
+            'datos' => $datos
+        ]);
+
+        // tamaño real ticket 80mm
+        //        $pdf->setPaper([0, 0, 226.77, 800]);
+        //        $pdf->setPaper([0, 0, 210, 800]);
+        $pdf->setPaper([0, 0, 226.77, 900]);
+        $nombre = 'ticket_' . time() . '.pdf';
+
+        $ruta = storage_path('app/public/' . $nombre);
+
+        $pdf->save($ruta);
+
+        return asset('storage/' . $nombre);
+    }
+
+   }
