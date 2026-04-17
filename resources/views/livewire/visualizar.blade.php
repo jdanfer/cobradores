@@ -76,7 +76,8 @@
                     $filtro_id == 5 ||
                     $filtro_id == 7 ||
                     $filtro_id == 8 ||
-                    $filtro_id == 9)
+                    $filtro_id == 9 ||
+                    $filtro_id == 10)
                 <div class="col-lg-4 col-md-8">
                     <div class="form-group">
                         @if ($filtro_id == 2)
@@ -107,6 +108,11 @@
                         @if ($filtro_id == 8)
                             <input type="text" class="form-control" id="edocumento"
                                 placeholder="Escriba número e-ticket..." name="edocumento" wire:model="edocumento"
+                                max="10">
+                        @endif
+                        @if ($filtro_id == 10)
+                            <input type="text" class="form-control" id="matricula"
+                                placeholder="Escriba matrícula..." name="matricula" wire:model="matricula"
                                 max="10">
                         @endif
 
@@ -355,8 +361,26 @@
 
                         markersData.forEach(function(registro) {
                             if (registro.lat && registro.lng) {
-
-                                var marker = L.marker([registro.lat, registro.lng])
+                                // Ícono rojo si yagestionado no es null, azul por defecto
+                                var iconColor = registro.yagestionado !== null ? 'red' : '#2a81cb';
+                                var customIcon = L.divIcon({
+                                    className: '',
+                                    html: `<div style="
+                                        background-color: ${iconColor};
+                                        width: 22px;
+                                        height: 22px;
+                                        border-radius: 50% 50% 50% 0;
+                                        transform: rotate(-45deg);
+                                        border: 2px solid white;
+                                        box-shadow: 1px 1px 3px rgba(0,0,0,0.4);
+                                    "></div>`,
+                                    iconSize: [14, 14],
+                                    iconAnchor: [7, 14],
+                                    popupAnchor: [0, -14]
+                                });
+                                var marker = L.marker([registro.lat, registro.lng], {
+                                        icon: customIcon
+                                    })
                                     .addTo(map)
                                     .bindPopup(`
                                 <div style="min-width: 200px;">

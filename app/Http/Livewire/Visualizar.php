@@ -21,7 +21,7 @@ class Visualizar extends Component
     public $desde = [];
     public $hasta = [];
     public $fechad, $fechah;
-    public $filtros, $filtro_id, $nombre, $telefono, $direccion, $cedula, $edocumento, $zona, $nombrecli;
+    public $filtros, $filtro_id, $nombre, $telefono, $direccion, $cedula, $edocumento, $zona, $nombrecli, $matricula;
     public $mensajeExito, $grupof, $grupofam;
     public $mensajeError, $sumatotal = 0, $sumatotalpend = 0, $haynuevas = 0;
     public $perPage = 15;
@@ -69,6 +69,10 @@ class Visualizar extends Component
         if ($this->filtro_id == 9) {
             $query->where("loc_cli",  $this->zona);
         }
+        if ($this->filtro_id == 10) {
+            $query->where("matricula",  $this->matricula);
+        }
+
         if ($this->filtro_id == 6) {
             $query->whereIn("nuevo",  [1, 2]);
             Emision::whereIn("nuevo",  [1, 2])->where('cob', (auth()->user()->cod_sapp))->whereIn('arqueo', ['P', 'E'])->update(['nuevo' => 2]);
@@ -125,7 +129,10 @@ class Visualizar extends Component
             $primerRegistro = Emision::where("loc_cli",  $this->zona)
                 ->whereNotNull('latitud')->where('cob', (auth()->user()->cod_sapp))->whereIn('arqueo', ['P', 'E'])->first();
         }
-
+        if ($this->filtro_id == 10) {
+            $primerRegistro = Emision::where("matricula",  $this->matricula)
+                ->whereNotNull('latitud')->where('cob', (auth()->user()->cod_sapp))->whereIn('arqueo', ['P', 'E'])->first();
+        }
         if ($this->filtro_id == 6) {
             $primerRegistro = Emision::whereIn("nuevo",  [1, 2])
                 ->whereNotNull('latitud')->where('cob', (auth()->user()->cod_sapp))->whereIn('arqueo', ['P', 'E'])->first();
@@ -411,12 +418,12 @@ class Visualizar extends Component
         $this->mensajeExito = 'Devolución registrada correctamente';
     }
 
-    public function imprimirTicket($id)
+    public function imprimirTicket($id) //confirmación del cobro del e-ticket o e-factura
     {
         $emision = Emision::find($id);
         $this->mensajeExito = null;
         $this->mensajeError = null;
-
+        
         if (!$emision) {
             $this->mensajeError = 'Emisión no encontrada';
             return;
@@ -509,6 +516,11 @@ class Visualizar extends Component
             $this->dispatchBrowserEvent('abrir-pdf', [
                 'url' => $url
             ]);
+            $tienemas = Emision::where('matricula', $emision->matricula)->whereIn('arqueo', ['P', 'E'])->get();
+            foreach ($tienemas as $item) {
+                $item->yagestionado = 1;
+                $item->save();
+            }
             $this->mensajeExito = 'Ticket impreso correctamente';
         } else {
             $this->mensajeError = 'Error al actualizar la emisión';
@@ -676,7 +688,8 @@ class Visualizar extends Component
                 'dia2' => $registro->dia2,
                 'total' => number_format($registro->total, 2, ',', '.'),
                 'direccion' => $registro->dir_cli,
-            ];
+                'yagestionado' => $registro->yagestionado,
+           ];
         })->values()->toArray();
 
         return $data;
